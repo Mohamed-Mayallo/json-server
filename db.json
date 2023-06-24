@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "firstName": "Mohamed",
+      "lastName": "Ali",
+      "skills": "Node.js and System Design",
+      "age": "25",
+      "id": 1
+    },
+    {
+      "firstName": "Ahmed",
+      "lastName": "Omar",
+      "skills": "Flutter and Ionic",
+      "age": 54,
+      "id": 2
+    }
+  ]
+}

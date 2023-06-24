@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Technical Assignment</title>
+  </head>
+  <body>
+    <label for="search">Search Items</label>
+    <input type="text" id="search" oninput="handleSearch(event)" />
+    <div id="items"></div>
+
+    <hr />
+
+    <p>Create New Item</p>
+    <form id="createItemForm" onsubmit="handleCreate(event)">
+      <label for="createFirstName">First Name</label>
+      <input name="firstName" id="createFirstName" type="text" />
+
+      <label for="createLastName">Last Name</label>
+      <input name="lastName" id="createLastName" type="text" />
+
+      <label for="createSkills">Skills</label>
+      <input name="skills" id="createSkills" type="text" />
+
+      <label for="createAge">Age</label>
+      <input name="age" id="createAge" type="number" />
+
+      <button type="submit">Create</button>
+      <span id="createSuccessMessage" style="color: green"></span>
+    </form>
+  </body>
+  <script>
+    async function handleSearch(event) {
+      const itemsNode = document.getElementById('items');
+      itemsNode.innerHTML = '';
+
+      const value = event.target.value;
+      if (!value) return;
+
+      const res = await fetch(`http://localhost:3000/items?q=${value}`),
+        dbItems = await res.json();
+
+      if (dbItems.length) {
+        const ulChild = document.createElement('ul');
+
+        for (const item of dbItems) {
+          const liChild = document.createElement('li');
+          liChild.innerText = `FirstName: ${item.firstName} | LastName: ${item.lastName} | Skills: ${item.skills} | Age: ${item.age}`;
+
+          const updateForm = document.createElement('form');
+          updateForm.setAttribute('id', 'updateItemForm');
+
+          const idNode = document.createElement('input');
+          idNode.setAttribute('type', 'number');
+          idNode.setAttribute('hidden', true);
+          idNode.setAttribute('name', 'id');
+          idNode.setAttribute('value', item.id);
+
+          const firstNameNode = document.createElement('input');
+          firstNameNode.setAttribute('type', 'text');
+          firstNameNode.setAttribute('name', 'firstName');
+          firstNameNode.setAttribute('value', item.firstName);
+
+          const lastNameNode = document.createElement('input');
+          lastNameNode.setAttribute('type', 'text');
+          lastNameNode.setAttribute('name', 'lastName');
+          lastNameNode.setAttribute('value', item.lastName);
+
+          const skillsNode = document.createElement('input');
+          skillsNode.setAttribute('type', 'text');
+          skillsNode.setAttribute('name', 'skills');
+          skillsNode.setAttribute('value', item.skills);
+
+          const ageNode = document.createElement('input');
+          ageNode.setAttribute('type', 'number');
+          ageNode.setAttribute('name', 'age');
+          ageNode.setAttribute('value', item.age);
+
+          const updateButton = document.createElement('button');
+          updateButton.setAttribute('type', 'button');
+          updateButton.innerText = 'Update';
+          updateButton.addEventListener('click', () => {
+            handleUpdate();
+          });
+
+          const updateSuccessMessage = document.createElement('p');
+          updateSuccessMessage.setAttribute('id', 'updateSuccessMessage');
+          updateSuccessMessage.setAttribute('style', 'color: green');
+
+          updateForm.appendChild(idNode);
+          updateForm.appendChild(firstNameNode);
+          updateForm.appendChild(lastNameNode);
+          updateForm.appendChild(skillsNode);
+          updateForm.appendChild(ageNode);
+          updateForm.appendChild(updateButton);
+          updateForm.appendChild(updateSuccessMessage);
+
+          liChild.appendChild(updateForm);
+
+          ulChild.appendChild(liChild);
+        }
+
+        itemsNode.appendChild(ulChild);
+      }
+    }
+
+    async function handleCreate(event) {
+      event.preventDefault();
+
+      const form = document.forms.createItemForm,
+        formData = new FormData(form);
+
+      const keysIterator = formData.keys(),
+        input = {};
+
+      while (true) {
+        const key = keysIterator.next();
+        if (key.done) break;
+
+        const value = formData.get(key.value);
+
+        if (!value) {
+          alert(`${key.value} is required!`);
+          return;
+        }
+
+        input[key.value] = value;
+      }
+
+      input.id = Math.floor(Math.random() * 9999);
+
+      const res = await fetch('http://localhost:3000/items', {
+        body: JSON.stringify(input),
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (res.ok) {
+        const spanNode = document.getElementById('createSuccessMessage');
+        spanNode.innerText = 'Created successfully!';
+
+        setTimeout(() => {
+          spanNode.innerText = '';
+        }, 2000);
+
+        form.reset();
+      }
+    }
+
+    async function handleUpdate() {
+      const form = document.forms.updateItemForm,
+        formData = new FormData(form);
+
+      const keysIterator = formData.keys(),
+        input = {};
+
+      while (true) {
+        const key = keysIterator.next();
+        if (key.done) break;
+
+        const value = formData.get(key.value);
+
+        if (!value) {
+          alert(`${key.value} is required!`);
+          return;
+        }
+
+        input[key.value] = value;
+      }
+
+      const itemId = input.id;
+      delete input.id;
+
+      const res = await fetch(`http://localhost:3000/items/${itemId}`, {
+        body: JSON.stringify(input),
+        method: 'PATCH',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (res.ok) {
+        const spanNode = document.getElementById('updateSuccessMessage');
+        spanNode.innerText = 'Updated successfully!';
+
+        setTimeout(() => {
+          spanNode.innerText = '';
+        }, 2000);
+      }
+    }
+  </script>
+</html>
